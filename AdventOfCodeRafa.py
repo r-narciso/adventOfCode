@@ -30,7 +30,27 @@ def day2(ab, file = None):
     elif ab == 'b':
         return
 
-
+def day3(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    d = {'<':(0,-1),'>':(0,1),'^':(1,1),'v':(1,-1)}
+    if ab == 'a':
+        s,here = set([(0,0)]),[0,0]
+        for c in dat:
+            c=d[c]
+            here[c[0]]+=c[1]
+            s.add(tuple(here))
+        return len(s)
+    elif ab == 'b':
+        s,here = set([(0,0)]),[[0,0],[0,0]]
+        for i,c in enumerate(dat):
+            c=d[c]
+            here[i%2][c[0]]+=c[1]
+            s.add(tuple(here[i%2]))
+        return len(s)
+        
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
