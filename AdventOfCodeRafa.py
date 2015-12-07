@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from itertools import permutations
+from itertools import permutations,groupby
+from re import match
 def day1(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
