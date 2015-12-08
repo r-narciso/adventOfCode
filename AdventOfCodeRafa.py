@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from itertools import permutations,groupby
-from re import match
+from itertools import permutations,groupby,product
+from re import compile
 def day1(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
@@ -82,10 +82,44 @@ def day5(ab, file = None):
                 if oneSep and dup: return True
             return False
         return len(list(filter(valid,dat)))
-        
+
+def day6(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    lights = [[0 for _ in range(1000)] for _ in range(1000)]
+    matcher = compile(r'(toggle|turn off|turn on) (\d+),(\d+) through (\d+),(\d+)')
+    if ab == 'a':
+        operDict = {'toggle': lambda x: not x, 'turn on': lambda _: True, 'turn off': lambda _: False}
+        lights_on = 0
+        for line in dat:
+            try:
+                operator,x1,y1,x2,y2 = [int(x) if x.isdigit() else x for x in matcher.match(line).groups()]
+            except (AttributeError, ValueError):
+                return 'Matcher error with line:\n' + line
+            for x,y in product(range(x1,x2+1),range(y1,y2+1)):
+                lights[x][y],old = operDict[operator](lights[x][y]),lights[x][y]
+                lights_on += lights[x][y] - old
+        return lights_on
+    elif ab == 'b':
+        operDict = {'toggle': lambda x: x+2, 'turn on': lambda x: x+1, 'turn off': lambda x: x and x-1}
+        lights_on = 0
+        for line in dat:
+            try:
+                operator,x1,y1,x2,y2 = [int(x) if x.isdigit() else x for x in matcher.match(line).groups()]
+            except (AttributeError, ValueError):
+                return 'Matcher error with line:\n' + line
+            for x,y in product(range(x1,x2+1),range(y1,y2+1)):
+                lights[x][y],old = operDict[operator](lights[x][y]),lights[x][y]
+                lights_on += lights[x][y] - old
+        return lights_on
+
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
+        #dat = dat.splitlines()
     except FileNotFoundError:
         return 'Could not find file!'
     if ab == 'a':
