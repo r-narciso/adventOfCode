@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from itertools import permutations,groupby,product
-from re import compile
+from re import match,sub,compile
+from collections import defaultdict
+
 def day1(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
@@ -115,7 +117,74 @@ def day6(ab, file = None):
                 lights[x][y],old = operDict[operator](lights[x][y]),lights[x][y]
                 lights_on += lights[x][y] - old
         return lights_on
-
+        
+def day8(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    if ab == 'a':
+        charSum,stringSum = 0,0
+        for line in dat:
+            charSum += len(line)
+            stringSum += len(eval(line))
+        return charSum-stringSum
+    elif ab == 'b':
+        charSum,stringSum = 0,0
+        for line in dat:
+            stringSum += len(line)
+            charSum += len(sub(r'(\\|")','\\\1',line)) + 2
+        return charSum-stringSum
+        
+def day9(ab, file = None):
+    MAXINT = 999999999
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    cities,paths = set(),defaultdict(list)
+    for line in dat:
+        try:
+            time,city1,city2 = sorted(match(r'(\w+) to (\w+) = (\d+)',line).groups())
+        except (AttributeError, ValueError):
+            return 'Matcher error with line:\n' + line
+        cities.add(city1)
+        cities.add(city2)
+        paths[city1].append((int(time),city2))
+        paths[city2].append((int(time),city1))
+    starting = list(cities)    
+    def findPath(here, citiesToVisit, pathDict, pathSum = 0,visited = []):
+        if not(citiesToVisit): return pathSum #if no more cities to visit, return current path
+        if not(pathDict[here]): return 0 #if there are no more paths, can't visit anymore cities
+        index = 0
+        visited.append(here)
+        while index < len(pathDict[here]):
+            there = pathDict[here][index]
+            if there[1] not in visited:
+                fullPath = findPath(there[1], citiesToVisit-1, pathDict, pathSum+there[0],visited)
+                if fullPath:
+                    visited.clear()
+                    return fullPath
+            index += 1
+        visited.pop() #remove `here` from visited
+        return 0
+    if ab == 'a':
+        for city in paths: paths[city].sort() #important
+        currentMin = findPath(starting.pop(), len(cities)-1,paths) or MAXINT
+        while starting:
+            nextMin = findPath(starting.pop(), len(cities)-1,paths)
+            currentMin = nextMin if nextMin>0 and nextMin<currentMin else currentMin
+        return currentMin
+    elif ab == 'b':
+        for city in paths: paths[city].sort(reverse = True) #important
+        currentMax = findPath(starting.pop(), len(cities)-1,paths)
+        while starting:
+            nextMax = findPath(starting.pop(), len(cities)-1,paths)
+            currentMax = nextMax if nextMax>currentMax else currentMax
+        return currentMax
+        
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
@@ -130,7 +199,13 @@ def dayx(ab, file = None):
 def main():
     functionDict = {
         '1':day1,
-        '2':day2
+        '2':day2,
+        '3':day3,
+        '4':day4,
+        '5':day5,
+        '6':day6,
+        '8':day7,
+        '9':day9,
     }
     while True:
         func = input('Which day would you like to do: (sample input \'1a\') ')
