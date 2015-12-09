@@ -115,7 +115,41 @@ def day6(ab, file = None):
                 lights[x][y],old = operDict[operator](lights[x][y]),lights[x][y]
                 lights_on += lights[x][y] - old
         return lights_on
-
+        
+def day9(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    if ab == 'a':
+        cities,paths = set(),defaultdict([])
+        for line in dat:
+            try:
+                time,city1,city2 = sorted(match(r'(\w+) to (\w+) = (\d+)',line).groups())
+            except (AttributeError, ValueError):
+                return 'Matcher error with line:\n' + line
+            cities.add(city1)
+            cities.add(city2)
+            paths[city1].append((int(time),city2))
+            paths[city2].append((int(time),city1))
+        for city in paths: paths[city].sort()
+        starting = list(cities)
+        def minPath(here, citiesToVisit, pathList, pathSum = 0,visited = []):
+            if not(citiesToVisit): return pathSum #if no more cities to visit, return current path
+            if not(pathList): return -1 #if there are no more paths, can't visit anymore cities
+            index = 0
+            visited
+            while index < len(pathList):
+                there = pathList[index]
+                if minPath(there, citiesToVisit, pathList, pathSum=0, 
+                          visited=[])
+            
+        while starting:
+            
+        return
+    elif ab == 'b':
+        return
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
