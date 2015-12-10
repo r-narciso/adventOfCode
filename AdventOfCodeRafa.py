@@ -137,8 +137,11 @@ def day8(ab, file = None):
             charSum += len(sub(r'(\\|")','\\\1',line)) + 2
         return charSum-stringSum
         
+from collections import defaultdict
+from re import match
+
 def day9(ab, file = None):
-    MAXINT = 999999999
+    MAXINT = float('Inf')
     try:
         dat = input('Text: ') if not file else open(file).read()
         dat = dat.splitlines()
@@ -147,19 +150,19 @@ def day9(ab, file = None):
     cities,paths = set(),defaultdict(list)
     for line in dat:
         try:
-            time,city1,city2 = sorted(match(r'(\w+) to (\w+) = (\d+)',line).groups())
+            city1,city2,time = match(r'(\w+) to (\w+) = (\d+)',line).groups()
         except (AttributeError, ValueError):
             return 'Matcher error with line:\n' + line
         cities.add(city1)
         cities.add(city2)
         paths[city1].append((int(time),city2))
         paths[city2].append((int(time),city1))
-    starting = list(cities)    
-    def findPath(here, citiesToVisit, pathDict, pathSum = 0,visited = []):
+    starting = list(cities)
+    def findPath(here, citiesToVisit, pathDict, pathSum = 0,visited = set()):
         if not(citiesToVisit): return pathSum #if no more cities to visit, return current path
         if not(pathDict[here]): return 0 #if there are no more paths, can't visit anymore cities
         index = 0
-        visited.append(here)
+        visited.add(here)
         while index < len(pathDict[here]):
             there = pathDict[here][index]
             if there[1] not in visited:
@@ -168,7 +171,7 @@ def day9(ab, file = None):
                     visited.clear()
                     return fullPath
             index += 1
-        visited.pop() #remove `here` from visited
+        visited.remove(here) #remove `here` from visited
         return 0
     if ab == 'a':
         for city in paths: paths[city].sort() #important
@@ -184,6 +187,10 @@ def day9(ab, file = None):
             nextMax = findPath(starting.pop(), len(cities)-1,paths)
             currentMax = nextMax if nextMax>currentMax else currentMax
         return currentMax
+    
+if __name__ == '__main__':
+    print(day9('a',r'C:\Users\arthurd\Documents\file.txt'))
+    
         
 def dayx(ab, file = None):
     try:
