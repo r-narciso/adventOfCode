@@ -185,6 +185,63 @@ def day9(ab, file = None):
             currentMax = nextMax if nextMax>currentMax else currentMax
         return currentMax
         
+def day10(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        #dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    if ab == 'a':
+        for _ in range(40):
+            dat = ''.join(str(len(list(j)))+i for i,j in groupby(dat))
+        return len(dat)
+    elif ab == 'b':
+        for _ in range(50):
+            dat = ''.join(str(len(list(j)))+i for i,j in groupby(dat))
+        return len(dat)
+            
+def day11(ab, file = None):
+    try:
+        data = input('Text: ') if not file else open(file).read()
+        #dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    def getPass(dat):
+        def getNext(s, forbidden = {8,11,14}):
+            new,remainder = [],0
+            while s:
+                new.append((s.pop(0)+1)%26)
+                new[-1] += new[-1] in forbidden
+                if new[-1]:
+                    new.extend(s)
+                    return new
+            return new
+        dat = [ord(c)-97 for c in dat.strip().lower()]
+        found,temp = False,[]
+        while dat:
+            temp.append(dat.pop(0))
+            if temp[-1] in [8,11,14]:
+                temp[-1] += 1
+                for _ in dat:
+                    temp.append(0)
+                break
+        dat = getNext(temp[::-1])
+        while True:
+            dup,chain = 0,[0,dat[0]+1]
+            for i,x in enumerate(groupby(dat)):
+                if len(list(x[1]))>1:
+                    dup += 1
+                    if chain[0] == 1: chain[1] = x[0]
+                chain[0] += 1 if (chain[1] - 1 == x[0] or chain[0] > 2) else -chain[0] + 1
+                chain[1] = x[0]
+                if dup > 1 and chain[0] > 2:
+                    return ''.join([chr(x+97) for x in dat[::-1]])
+            dat = getNext(dat)
+    if ab == 'a':
+        return getPass(data)
+    elif ab == 'b':
+        return getPass(getPass(data))
+        
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
@@ -206,6 +263,8 @@ def main():
         '6':day6,
         '8':day7,
         '9':day9,
+        '10':day10,
+        '11':day11
     }
     while True:
         func = input('Which day would you like to do: (sample input \'1a\') ')
