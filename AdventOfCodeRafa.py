@@ -3,6 +3,7 @@
 from itertools import permutations,groupby,product
 from re import match,sub,compile
 from collections import defaultdict
+from json import load
 
 def day1(ab, file = None):
     try:
@@ -138,52 +139,40 @@ def day8(ab, file = None):
         return charSum-stringSum
         
 def day9(ab, file = None):
-    MAXINT = 999999999
+    MAXINT = float('Inf') if ab == 'a' else 0
     try:
         dat = input('Text: ') if not file else open(file).read()
         dat = dat.splitlines()
-    except FileNotFoundError:
+    except:
         return 'Could not find file!'
     cities,paths = set(),defaultdict(list)
     for line in dat:
         try:
-            time,city1,city2 = sorted(match(r'(\w+) to (\w+) = (\d+)',line).groups())
+            city1,city2,time = match(r'(\w+) to (\w+) = (\d+)',line).groups()
         except (AttributeError, ValueError):
             return 'Matcher error with line:\n' + line
         cities.add(city1)
         cities.add(city2)
         paths[city1].append((int(time),city2))
         paths[city2].append((int(time),city1))
-    starting = list(cities)    
-    def findPath(here, citiesToVisit, pathDict, pathSum = 0,visited = []):
+    def findPath(here, citiesToVisit, pathSum = 0,visited = set()):
         if not(citiesToVisit): return pathSum #if no more cities to visit, return current path
-        if not(pathDict[here]): return 0 #if there are no more paths, can't visit anymore cities
-        index = 0
-        visited.append(here)
-        while index < len(pathDict[here]):
-            there = pathDict[here][index]
-            if there[1] not in visited:
-                fullPath = findPath(there[1], citiesToVisit-1, pathDict, pathSum+there[0],visited)
+        if not(paths[here]): return MAXINT #if there are no more paths, can't visit anymore cities
+        visited.add(here)
+        for distance, name in paths[here]:
+            if name not in visited:
+                fullPath = findPath(name, citiesToVisit-1, pathSum+distance,visited)
                 if fullPath:
                     visited.clear()
                     return fullPath
-            index += 1
-        visited.pop() #remove `here` from visited
-        return 0
+        visited.remove(here)
+        return MAXINT
     if ab == 'a':
         for city in paths: paths[city].sort() #important
-        currentMin = findPath(starting.pop(), len(cities)-1,paths) or MAXINT
-        while starting:
-            nextMin = findPath(starting.pop(), len(cities)-1,paths)
-            currentMin = nextMin if nextMin>0 and nextMin<currentMin else currentMin
-        return currentMin
+        return min(findPath(c, len(cities)-1) for c in cities)
     elif ab == 'b':
         for city in paths: paths[city].sort(reverse = True) #important
-        currentMax = findPath(starting.pop(), len(cities)-1,paths)
-        while starting:
-            nextMax = findPath(starting.pop(), len(cities)-1,paths)
-            currentMax = nextMax if nextMax>currentMax else currentMax
-        return currentMax
+        return max(findPath(c,len(cities)-1) for c in cities)
         
 def day10(ab, file = None):
     try:
@@ -242,6 +231,89 @@ def day11(ab, file = None):
     elif ab == 'b':
         return getPass(getPass(data))
         
+def day12(ab, file = None):
+    
+    if ab == 'a':
+        def SmartSum(x):
+            if isinstance(x,int):
+                return x
+            elif isinstance(x, list):
+                return sum([SmartSum(i) for i in x])
+            elif isinstance(x, dict):
+                return sum([SmartSum(x[i]) for i in x])
+            else:
+                return 0
+        try:
+            return SmartSum(load(open(file)))
+        except FileNotFoundError:
+            return 'Could not find file!'
+    elif ab == 'b':
+        def SmartSum(x):
+            if isinstance(x,int):
+                return x
+            elif isinstance(x, list):
+                return sum([SmartSum(i) for i in x])
+            elif isinstance(x, dict):
+                if 'red' in x.values(): return 0
+                return sum([SmartSum(x[i]) for i in x])
+            else:
+                return 0
+        try:
+            return SmartSum(load(open(file)))
+        except FileNotFoundError:
+            return 'Could not find file!'
+    
+    def day13(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    people,happy = set() if ab == 'a' else set(('me',)),defaultdict(int)
+    for line in dat:
+        try:
+            name1, gorl, num, name2 = match(r'(\w+) would (gain|lose) (\d+) (?:\w+ )*(\w+).',line).groups()
+        except (AttributeError, ValueError):
+            return 'Matcher error with line:\n' + line
+        people.add(name1)
+        people.add(name2)
+        happy[tuple(sorted((name1,name2)))]+= int(num) if gorl == 'gain' else -int(num)
+    def rotations(rotator,howMany):
+        return [rotator[i:]+rotator[:i] for i in range(howMany)]
+    l = [arrangement for arrangement in zip(*rotations(list(people),len(people)))]
+    optimal = 0
+    for arrangement in permutations(people):
+        optimal = max(optimal,sum(happy[tuple(sorted((x,y)))] for x,y in zip(*rotations(arrangement,2))))
+    return optimal
+
+def day14(ab, file = None):
+    try:
+        dat = input('Text: ') if not file else open(file).read()
+        dat = dat.splitlines()
+    except FileNotFoundError:
+        return 'Could not find file!'
+    distance, time = {}, 2503
+    if ab == 'a':
+        for line in dat:
+            name, speed, length, rest =[int(x) if x.isdigit() else x for x in match(r'(\w+) can fly (\d+) km/s for (\d+) seconds, but then must rest for (\d+) seconds.',line).groups()]
+            distance[name] = speed * (length *(time // (length + rest)) + length % (time % (length + rest)))
+        return max(distance.values())
+    elif ab == 'b':
+        stats,points = {' ':[0]}, {}
+        winning = ' '
+        for line in dat:
+            name, speed, length, rest =[int(x) if x.isdigit() else x for x in match(r'(\w+) can fly (\d+) km/s for (\d+) seconds, but then must rest for (\d+) seconds.',line).groups()]
+            stats[name] = [speed,length,length+rest]
+            distance[name],points[name] = 0,0
+            if speed > stats[winning][0]: winning = name
+        for i in range(time):
+            for name in distance:
+                distance[name] += stats[name][0] if i%stats[name][-1] < stats[name][1] else 0
+                if distance[name] > distance[winning]: winning = name
+            points[winning] += 1
+        return points, sum(points.values())
+
+
 def dayx(ab, file = None):
     try:
         dat = input('Text: ') if not file else open(file).read()
@@ -264,7 +336,10 @@ def main():
         '8':day7,
         '9':day9,
         '10':day10,
-        '11':day11
+        '11':day11,
+        '12':day12,
+        '13':day13,
+        '14':day14
     }
     while True:
         func = input('Which day would you like to do: (sample input \'1a\') ')
